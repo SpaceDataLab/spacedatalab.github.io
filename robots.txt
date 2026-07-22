@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://spacedatalab.org/sitemap.xml

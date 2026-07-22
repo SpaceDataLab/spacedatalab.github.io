@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpaceDataLab — high-precision astrodynamics in Rust</title>
+  <meta name="description" content="An open, modern stack for orbit propagation, force modeling, GNSS, constellation design, and Earth-observation geometry — derived from the primary literature and differentially tested.">
+  <meta name="theme-color" content="#070b16">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://spacedatalab.org/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://spacedatalab.org/">
+  <meta property="og:title" content="SpaceDataLab — high-precision astrodynamics in Rust">
+  <meta property="og:description" content="Orbit propagation, force modeling, GNSS, constellation design, and Earth-observation geometry — derived from the primary literature and differentially tested.">
+  <style>
+    :root {
+      --bg: #070b16;
+      --panel: #0f1524;
+      --panel-2: #131b2e;
+      --border: #1e2740;
+      --fg: #e8edf7;
+      --muted: #93a0bd;
+      --accent: #6ea8fe;
+      --accent-2: #7ee7d0;
+      --radius: 14px;
+      --maxw: 1080px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: .2px; color: var(--fg); }
+    .brand img { width: 26px; height: 26px; }
+    .nav a.ghost { color: var(--muted); font-size: 15px; }
+    .nav a.ghost:hover { color: var(--fg); text-decoration: none; }
+
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 96px 0 72px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 420px at 72% -8%, rgba(110,168,254,.16), transparent 60%),
+        radial-gradient(700px 360px at 12% 8%, rgba(126,231,208,.10), transparent 60%);
+    }
+    .stars { position: absolute; inset: 0; pointer-events: none; opacity: .5;
+      background-image:
+        radial-gradient(1.4px 1.4px at 15% 30%, #cdd7ee 50%, transparent),
+        radial-gradient(1.2px 1.2px at 65% 18%, #aeb9d6 50%, transparent),
+        radial-gradient(1.6px 1.6px at 82% 55%, #dbe3f5 50%, transparent),
+        radial-gradient(1.1px 1.1px at 38% 72%, #9aa6c6 50%, transparent),
+        radial-gradient(1.3px 1.3px at 50% 40%, #c3cde8 50%, transparent),
+        radial-gradient(1.1px 1.1px at 90% 85%, #b6c1de 50%, transparent);
+    }
+    .hero .wrap { position: relative; }
+    .eyebrow { color: var(--accent-2); font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; margin: 0 0 18px; }
+    h1 { margin: 0 0 18px; font-size: clamp(34px, 6vw, 58px); line-height: 1.05; letter-spacing: -1px; }
+    h1 .grad { background: linear-gradient(92deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 640px; margin: 0 0 30px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 15px;
+      border: 1px solid transparent; transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    }
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #04122e; }
+    .btn-primary:hover { background: #8bbcff; }
+    .btn-ghost { border-color: var(--border); color: var(--fg); background: var(--panel); }
+    .btn-ghost:hover { border-color: #33406b; background: var(--panel-2); }
+    .meta { margin: 22px 0 0; color: var(--muted); font-size: 14px; }
+    .meta b { color: var(--fg); font-weight: 600; }
+
+    section.block { padding: 76px 0; }
+    .kicker { color: var(--accent-2); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 10px; }
+    h2 { margin: 0 0 8px; font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -.4px; }
+    .sub { color: var(--muted); margin: 0 0 40px; max-width: 640px; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px 22px; transition: border-color .2s ease, transform .12s ease;
+    }
+    .card:hover { border-color: #35437063; transform: translateY(-2px); }
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    .card h3 .tag { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; font-weight: 500; }
+    .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
+    @media (max-width: 860px) { .principles { grid-template-columns: 1fr; } }
+    .principle { border-left: 2px solid var(--accent); padding: 4px 0 4px 18px; }
+    .principle h4 { margin: 0 0 6px; font-size: 16px; }
+    .principle p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    footer { border-top: 1px solid var(--border); padding: 34px 0; color: var(--muted); font-size: 14px; }
+    .foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--fg); }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .card { transition: none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <span class="brand"><img src="/favicon.svg" alt="" width="26" height="26">SpaceDataLab</span>
+      <nav>
+        <a class="ghost" href="#capabilities">Capabilities</a>
+        &nbsp;&nbsp;
+        <a class="ghost" href="https://github.com/SpaceDataLab">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="stars" aria-hidden="true"></div>
+      <div class="wrap">
+        <p class="eyebrow">Space data · computed precisely</p>
+        <h1>High-precision astrodynamics,<br><span class="grad">engineered in Rust.</span></h1>
+        <p class="lede">
+          SpaceDataLab builds an open, modern stack for orbit propagation, force modeling,
+          GNSS, constellation design, and Earth-observation geometry — derived from the
+          primary literature and differentially tested.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/SpaceDataLab">View on GitHub →</a>
+          <a class="btn btn-ghost" href="#capabilities">Explore capabilities</a>
+        </div>
+        <p class="meta"><b>Rust</b> · no_std core · verified against <b>IERS</b> &amp; <b>Orekit</b> · accuracy never truncated</p>
+      </div>
+    </div>
+
+    <section class="block" id="capabilities">
+      <div class="wrap">
+        <p class="kicker">Capabilities</p>
+        <h2>One stack, from orbit dynamics to imagery</h2>
+        <p class="sub">A cohesive set of libraries covering the full path from a satellite's dynamics to the data it returns.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>Astrodynamics core</h3>
+            <p>High-order and symplectic integrators, full force models — geopotential, solid / ocean / pole tides, drag, solar radiation pressure, third body, relativity — and IAU 2006/2000A reference frames.</p>
+          </div>
+          <div class="card">
+            <h3>Constellations &amp; coverage</h3>
+            <p>Walker, street-of-coverage, flower, and kinematically-regular networks, with coverage, revisit, and figure-of-merit analysis.</p>
+          </div>
+          <div class="card">
+            <h3>GNSS</h3>
+            <p>GPS, Galileo, BeiDou, QZSS, NavIC and GLONASS orbits, DOP geometry, and ionospheric / tropospheric delay models, with SP3 and RINEX support.</p>
+          </div>
+          <div class="card">
+            <h3>earthvision <span class="tag">EO geometry</span></h3>
+            <p>Satellite photogrammetry: RPC sensor models, bundle adjustment, orthorectification, stereo DSM, dense multi-view stereo, and atmospheric correction.</p>
+          </div>
+          <div class="card">
+            <h3>spacesignal <span class="tag">SAR</span></h3>
+            <p>Synthetic-aperture radar: range-Doppler and chirp-scaling focusing, interferometry, and tomography for elevation and deformation.</p>
+          </div>
+          <div class="card">
+            <h3>deepvision <span class="tag">ML</span></h3>
+            <p>Dependency-free neural-network inference with ONNX interop, built for on-board Earth-observation tasks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" style="padding-top:0;">
+      <div class="wrap">
+        <p class="kicker">Principles</p>
+        <h2>Built to be trusted</h2>
+        <p class="sub">Correctness is the product. Every result traces back to a reference.</p>
+        <div class="principles">
+          <div class="principle">
+            <h4>Verified</h4>
+            <p>Every model is differentially tested against primary references — IERS conventions, Orekit, and the source literature.</p>
+          </div>
+          <div class="principle">
+            <h4>Lean by construction</h4>
+            <p>A no_std Rust core: fast, memory-efficient, and stack-allocated — designed to run on the ground and in orbit.</p>
+          </div>
+          <div class="principle">
+            <h4>Full precision</h4>
+            <p>Double-double arithmetic and full-resolution models. Accuracy is a choice for the caller, never truncated for convenience.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <span>© 2026 SpaceDataLab · spacedatalab.org</span>
+      <a href="https://github.com/SpaceDataLab">github.com/SpaceDataLab</a>
+    </div>
+  </footer>
+</body>
+</html>
