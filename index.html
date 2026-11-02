@@ -3,25 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SpaceDataLab — high-precision astrodynamics in Rust</title>
-  <meta name="description" content="An open, modern stack for orbit propagation, force modeling, GNSS, constellation design, and Earth-observation geometry — derived from the primary literature and differentially tested.">
-  <meta name="theme-color" content="#070b16">
+  <title>SpaceDataLab — astrodynamics in Rust, independently verified</title>
+  <meta name="description" content="Open, verified space-data computation. spacelab is astrodynamics in Rust with the verification as the deliverable: reference frames, SGP4, numerical propagation, orbit determination, GNSS, laser ranging, coverage, and Earth-observation geometry.">
+  <meta name="theme-color" content="#000b2c">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="https://spacedatalab.org/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://spacedatalab.org/">
-  <meta property="og:title" content="SpaceDataLab — high-precision astrodynamics in Rust">
-  <meta property="og:description" content="Orbit propagation, force modeling, GNSS, constellation design, and Earth-observation geometry — derived from the primary literature and differentially tested.">
+  <meta property="og:title" content="SpaceDataLab — astrodynamics in Rust, independently verified">
+  <meta property="og:description" content="Reference frames, SGP4, numerical propagation, orbit determination, GNSS, laser ranging, coverage, and Earth-observation geometry. Every check is written down with its oracle and residual.">
+  <meta property="og:image" content="https://spacedatalab.org/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SpaceDataLab logo">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     :root {
-      --bg: #070b16;
-      --panel: #0f1524;
-      --panel-2: #131b2e;
-      --border: #1e2740;
+      --bg: #000b2c;
+      --panel: #081438;
+      --panel-2: #0c1b47;
+      --border: #1c2c5c;
       --fg: #e8edf7;
-      --muted: #93a0bd;
-      --accent: #6ea8fe;
-      --accent-2: #7ee7d0;
+      --muted: #a3b0cf;
+      --accent: #38c6ff;
+      --accent-2: #b79bff;
+      --logo-cyan: #06b7f9;
+      --logo-violet: #a071f5;
       --radius: 14px;
       --maxw: 1080px;
     }
@@ -47,9 +54,11 @@
     }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 62px; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; letter-spacing: .2px; color: var(--fg); }
-    .brand img { width: 26px; height: 26px; }
+    .brand img { width: 52px; height: auto; }
+    .nav nav { display: flex; gap: 18px; }
     .nav a.ghost { color: var(--muted); font-size: 15px; }
     .nav a.ghost:hover { color: var(--fg); text-decoration: none; }
+    @media (max-width: 560px) { .nav a.ghost.optional { display: none; } }
 
     .hero {
       position: relative; overflow: hidden;
@@ -69,9 +78,15 @@
         radial-gradient(1.1px 1.1px at 90% 85%, #b6c1de 50%, transparent);
     }
     .hero .wrap { position: relative; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 48px; align-items: center; }
+    .hero-logo { display: block; width: 100%; height: auto; }
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+      .hero-logo { order: -1; max-width: 240px; }
+    }
     .eyebrow { color: var(--accent-2); font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; margin: 0 0 18px; }
-    h1 { margin: 0 0 18px; font-size: clamp(34px, 6vw, 58px); line-height: 1.05; letter-spacing: -1px; }
-    h1 .grad { background: linear-gradient(92deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    h1 { margin: 0 0 18px; font-size: clamp(32px, 4.6vw, 50px); line-height: 1.08; letter-spacing: -1px; }
+    h1 .grad { background: linear-gradient(92deg, var(--logo-cyan), var(--logo-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .lede { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 640px; margin: 0 0 30px; }
     .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .btn {
@@ -80,10 +95,10 @@
       border: 1px solid transparent; transition: transform .06s ease, background .2s ease, border-color .2s ease;
     }
     .btn:hover { text-decoration: none; transform: translateY(-1px); }
-    .btn-primary { background: var(--accent); color: #04122e; }
-    .btn-primary:hover { background: #8bbcff; }
+    .btn-primary { background: var(--accent); color: #00143d; }
+    .btn-primary:hover { background: #7ad9ff; }
     .btn-ghost { border-color: var(--border); color: var(--fg); background: var(--panel); }
-    .btn-ghost:hover { border-color: #33406b; background: var(--panel-2); }
+    .btn-ghost:hover { border-color: #3a4d8a; background: var(--panel-2); }
     .meta { margin: 22px 0 0; color: var(--muted); font-size: 14px; }
     .meta b { color: var(--fg); font-weight: 600; }
 
@@ -99,10 +114,24 @@
       border: 1px solid var(--border); border-radius: var(--radius);
       padding: 24px 22px; transition: border-color .2s ease, transform .12s ease;
     }
-    .card:hover { border-color: #35437063; transform: translateY(-2px); }
+    .card:hover { border-color: #3a4d8a; transform: translateY(-2px); }
     .card h3 { margin: 0 0 8px; font-size: 18px; }
-    .card h3 .tag { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; font-weight: 500; }
+    .card .tag { display: inline-block; margin-top: 10px; padding-block: 3px; color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
     .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+    table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px; }
+    th, td { padding: 13px 18px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+    th { color: var(--muted); font-size: 13px; font-weight: 600; }
+    th:first-child, td:first-child { text-align: left; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody td:last-child { font-weight: 700; }
+    .note { color: var(--muted); font-size: 15px; max-width: 760px; margin: 18px 0 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 34px; }
+    @media (max-width: 860px) { .stats { grid-template-columns: 1fr; } }
+    .stat { border-left: 2px solid var(--accent); padding: 2px 0 2px 18px; }
+    .stat b { display: block; font-size: 26px; line-height: 1.2; letter-spacing: -.3px; }
+    .stat span { color: var(--muted); font-size: 15px; }
 
     .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
     @media (max-width: 860px) { .principles { grid-template-columns: 1fr; } }
@@ -120,12 +149,11 @@
 <body>
   <header>
     <div class="wrap nav">
-      <span class="brand"><img src="/favicon.svg" alt="" width="26" height="26">SpaceDataLab</span>
+      <span class="brand"><img src="logo-emblem.webp" alt="" width="180" height="132">SpaceDataLab</span>
       <nav>
-        <a class="ghost" href="#capabilities">Capabilities</a>
-        &nbsp;&nbsp;
+        <a class="ghost optional" href="#results">Results</a>
+        <a class="ghost optional" href="#capabilities">Capabilities</a>
         <a class="ghost" href="https://docs.rs/spacelab">Docs</a>
-        &nbsp;&nbsp;
         <a class="ghost" href="https://github.com/SpaceDataLab/spacelab">GitHub</a>
       </nav>
     </div>
@@ -134,56 +162,112 @@
   <main>
     <div class="hero">
       <div class="stars" aria-hidden="true"></div>
-      <div class="wrap">
-        <p class="eyebrow">Space data · computed precisely</p>
-        <h1>High-precision astrodynamics,<br><span class="grad">engineered in Rust.</span></h1>
-        <p class="lede">
-          SpaceDataLab builds an open, modern stack for orbit propagation, force modeling,
-          GNSS, constellation design, and Earth-observation geometry — derived from the
-          primary literature and differentially tested.
-        </p>
-        <div class="cta">
-          <a class="btn btn-primary" href="https://github.com/SpaceDataLab/spacelab">View on GitHub →</a>
-          <a class="btn btn-ghost" href="#capabilities">Explore capabilities</a>
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">Open, verified space-data computation</p>
+          <h1>Astrodynamics in Rust,<br><span class="grad">with the verification as the deliverable.</span></h1>
+          <p class="lede">
+            spacelab covers time scales and reference frames, SGP4, numerical and semi-analytical
+            propagation with the full IERS 2010 force model, orbit determination, GNSS, satellite
+            laser ranging, coverage and constellation design, and Earth-observation geometry.
+            Mathematics decides what is correct; other codes are comparisons, never the proof.
+          </p>
+          <div class="cta">
+            <a class="btn btn-primary" href="https://github.com/SpaceDataLab/spacelab">View on GitHub →</a>
+            <a class="btn btn-ghost" href="https://github.com/SpaceDataLab/spacelab/blob/main/docs/verification.md">Verification ledger</a>
+          </div>
+          <p class="meta">
+            <a href="https://crates.io/crates/spacedatalab"><code>cargo add spacedatalab</code></a> ·
+            <a href="https://pypi.org/project/spacedatalab/"><code>pip install spacedatalab</code></a> ·
+            <a href="https://github.com/SpaceDataLab/spacelab/tree/main/crates/spacelab-capi">C and C++20</a> ·
+            <a href="https://docs.rs/spacelab">API docs</a>
+          </p>
+          <p class="meta"><b>Rust</b> · no_std core · Python, C and C++ interfaces · MIT OR Apache-2.0</p>
         </div>
-        <p class="meta">
-          <a href="https://crates.io/crates/spacedatalab"><code>cargo add spacedatalab</code></a> ·
-          <a href="https://pypi.org/project/spacedatalab/"><code>pip install spacedatalab</code></a> ·
-          <a href="https://docs.rs/spacelab">API docs</a>
-        </p>
-        <p class="meta"><b>Rust</b> · no_std core · verified against <b>IERS</b> &amp; <b>Orekit</b> · accuracy never truncated</p>
+        <img class="hero-logo" src="logo.webp" alt="SpaceDataLab logo" width="800" height="637">
       </div>
     </div>
 
-    <section class="block" id="capabilities">
+    <section class="block" id="results">
+      <div class="wrap">
+        <p class="kicker">At a glance</p>
+        <h2>The whole chain, against a product nobody here produced</h2>
+        <p class="sub">A seven-parameter fit to the IGS final precise orbit for 2025-01-01. Post-fit residual, in metres of real orbit.</p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Third bodies</th><th scope="col">Radial</th><th scope="col">Along</th><th scope="col">Cross</th><th scope="col">3D RMS</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Analytic Sun + Moon (committed fixture, runs in CI)</td><td>0.175</td><td>0.221</td><td>0.105</td><td>0.300 m</td></tr>
+              <tr><td>DE440 kernel</td><td>0.054</td><td>0.063</td><td>0.045</td><td>0.094 m</td></tr>
+              <tr><td>Orekit 13.1.7, its own fit of the same file</td><td>0.053</td><td>0.062</td><td>0.065</td><td>0.105 m</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Earth orientation, the CIO frame chain, the geopotential, luni-solar attraction, solar pressure,
+          relativity, the variational equations and the estimator all have to be right together for that
+          to come out small. <a href="https://github.com/SpaceDataLab/spacelab/blob/main/crates/spacelab/tests/igs_orbit_fit.rs">Read the test</a>.
+        </p>
+        <div class="stats">
+          <p class="stat"><b>≤ 250 nm</b><span>SGP4 against python-sgp4 over 24 h, for the ISS. Both run Vallado's SGP4, so this pins units, epochs and frames.</span></p>
+          <p class="stat"><b>≤ 0.012 µas</b><span>The CIO chain against ERFA's identical route, 1900–2100.</span></p>
+          <p class="stat"><b>417 of 417</b><span>Passes over 108 cells in 24 h found by 1 s brute force. The event engine needs no step: it brackets every edge and refines it to 1 ms.</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="capabilities" style="padding-top:0;">
       <div class="wrap">
         <p class="kicker">Capabilities</p>
         <h2>One stack, from orbit dynamics to imagery</h2>
-        <p class="sub">A cohesive set of libraries covering the full path from a satellite's dynamics to the data it returns.</p>
+        <p class="sub">Use a single crate, or take them all with <code>cargo add spacedatalab --features full</code>.</p>
         <div class="grid">
           <div class="card">
-            <h3>Astrodynamics core</h3>
-            <p>High-order and symplectic integrators, full force models — geopotential, solid / ocean / pole tides, drag, solar radiation pressure, third body, relativity — and IAU 2006/2000A reference frames.</p>
+            <h3>Time &amp; frames</h3>
+            <p>Time scales and frames as types, epochs as exact nanosecond counts. The CIO frame chain with the full IAU 2000A nutation, IERS Earth-orientation data, and WGS-84 geodesy.</p>
+            <a class="tag" href="https://docs.rs/spacelab-frames">spacelab-frames</a>
           </div>
           <div class="card">
-            <h3>Constellations &amp; coverage</h3>
-            <p>Walker, street-of-coverage, flower, and kinematically-regular networks, with coverage, revisit, and figure-of-merit analysis.</p>
+            <h3>Propagation</h3>
+            <p>SGP4 for many satellites at once. Runge-Kutta, multistep, symplectic and Taylor integrators, the IERS 2010 force model, atmospheric density models, DSST, and attitude.</p>
+            <a class="tag" href="https://docs.rs/spacelab-propagation">spacelab-propagation</a>
+          </div>
+          <div class="card">
+            <h3>Orbit determination &amp; ranging</h3>
+            <p>Square-root information and Kalman-family filters, smoothers, conjunction probability, and CCSDS messages. Satellite laser ranging from CRD normal points to a modelled two-way range.</p>
+            <a class="tag" href="https://docs.rs/spacelab-estimation">spacelab-estimation</a>
           </div>
           <div class="card">
             <h3>GNSS</h3>
-            <p>GPS, Galileo, BeiDou, QZSS, NavIC and GLONASS orbits, DOP geometry, and ionospheric / tropospheric delay models, with SP3 and RINEX support.</p>
+            <p>GPS, Galileo, BeiDou, QZSS, NavIC and GLONASS broadcast orbits, RINEX 3/4 and SP3 parsing, observation processing, tropospheric mapping and DOP, with the NeQuick-G ionosphere.</p>
+            <a class="tag" href="https://docs.rs/spacelab-gnss">spacelab-gnss</a>
           </div>
           <div class="card">
-            <h3>earthvision <span class="tag">EO geometry</span></h3>
-            <p>Satellite photogrammetry: RPC sensor models, bundle adjustment, orthorectification, stereo DSM, dense multi-view stereo, and atmospheric correction.</p>
+            <h3>Constellations &amp; coverage</h3>
+            <p>Walker, Street-of-Coverage, Flower, 2-D Lattice, kinematically-regular and Draim generators, access windows found without a time step, and H3 geodesic grids.</p>
+            <a class="tag" href="https://docs.rs/spacelab-constellation">spacelab-constellation</a>
           </div>
           <div class="card">
-            <h3>spacesignal <span class="tag">SAR</span></h3>
-            <p>Synthetic-aperture radar: range-Doppler and chirp-scaling focusing, interferometry, and tomography for elevation and deformation.</p>
+            <h3>Mission design</h3>
+            <p>Universal-variable Kepler, Lambert transfers, patched conics and the circular restricted three-body problem, with JPL DE440 ephemerides for cislunar and deep space.</p>
+            <a class="tag" href="https://docs.rs/spacelab-astro">spacelab-astro</a>
           </div>
           <div class="card">
-            <h3>deepvision <span class="tag">ML</span></h3>
-            <p>Dependency-free neural-network inference with ONNX interop, built for on-board Earth-observation tasks.</p>
+            <h3>Earth observation</h3>
+            <p>RPC sensor models with bias compensation, bundle adjustment, orthorectification, stereo and multi-view surface models, atmospheric correction, and Monte Carlo radiative transfer.</p>
+            <a class="tag" href="https://docs.rs/spacelab-earthvision">spacelab-earthvision</a>
+          </div>
+          <div class="card">
+            <h3>Synthetic-aperture radar</h3>
+            <p>Range-Doppler and chirp-scaling focusing, interferometry with persistent-scatterer and SBAS time series, polarimetry, tomography, and filtered back-projection.</p>
+            <a class="tag" href="https://docs.rs/spacelab-signal">spacelab-signal</a>
+          </div>
+          <div class="card">
+            <h3>On-board vision</h3>
+            <p>Pure-Rust, no_std CNN inference with no ML framework. Trained ONNX models load through an opt-in feature.</p>
+            <a class="tag" href="https://docs.rs/spacelab-vision">spacelab-vision</a>
           </div>
         </div>
       </div>
@@ -193,29 +277,48 @@
       <div class="wrap">
         <p class="kicker">Principles</p>
         <h2>Built to be trusted</h2>
-        <p class="sub">Correctness is the product. Every result traces back to a reference.</p>
+        <p class="sub">Correctness is the product. Every check is written down with its oracle and residual.</p>
         <div class="principles">
           <div class="principle">
-            <h4>Verified</h4>
-            <p>Every model is differentially tested against primary references — IERS conventions, Orekit, and the source literature.</p>
+            <h4>Mathematics decides</h4>
+            <p>A formula is verified by its derivation, an exact value, or the equation that defines it. Orekit, ERFA and NEPTUNE are comparisons, published as distances.</p>
           </div>
           <div class="principle">
-            <h4>Lean by construction</h4>
-            <p>A no_std Rust core: fast, memory-efficient, and stack-allocated — designed to run on the ground and in orbit.</p>
+            <h4>Derived, not transcribed</h4>
+            <p>From the primary literature, with the symbolic derivations committed and re-proved in Maxima on every run.</p>
           </div>
           <div class="principle">
-            <h4>Full precision</h4>
-            <p>Double-double arithmetic and full-resolution models. Accuracy is a choice for the caller, never truncated for convenience.</p>
+            <h4>Mutation-tested</h4>
+            <p>Every crate has been through cargo mutants. Each survivor is killed or argued equivalent in a ledger.</p>
+          </div>
+          <div class="principle">
+            <h4>Frames are types</h4>
+            <p><code>Epoch&lt;Tai&gt;</code> is not <code>Epoch&lt;Ut1&gt;</code>, and a <code>Rotation&lt;Teme, Itrf&gt;</code> composes only with a matching frame.</p>
+          </div>
+          <div class="principle">
+            <h4>Lean by design</h4>
+            <p>A no_std, stack-allocated core: a degree-120 geopotential propagation holds about 0.84 MB and allocates nothing.</p>
+          </div>
+          <div class="principle">
+            <h4>Full-resolution models</h4>
+            <p>XGM2019e geopotential, FES2014b ocean tide to degree 100, the full IAU 2000A nutation. Truncation is the caller's choice, never the data's.</p>
           </div>
         </div>
+        <p class="note">
+          The limits are written down too: <a href="https://github.com/SpaceDataLab/spacelab/blob/main/docs/limitations.md">the error budget</a> splits
+          what the engine adds from what it inherits, and for TLE-driven work the second dominates by a factor of a thousand.
+          See also the <a href="https://github.com/SpaceDataLab/spacelab/blob/main/docs/design.md">design</a>,
+          <a href="https://github.com/SpaceDataLab/spacelab/blob/main/docs/provenance.md">provenance</a> and
+          <a href="https://github.com/SpaceDataLab/spacelab/blob/main/CHANGELOG.md">changelog</a>.
+        </p>
       </div>
     </section>
   </main>
 
   <footer>
     <div class="wrap foot">
-      <span>© 2026 SpaceDataLab · spacedatalab.org</span>
-      <a href="https://github.com/SpaceDataLab/spacelab">github.com/SpaceDataLab/spacelab</a>
+      <span>© 2026 SpaceDataLab · MIT OR Apache-2.0</span>
+      <a href="https://github.com/SpaceDataLab">github.com/SpaceDataLab</a>
     </div>
   </footer>
 </body>
